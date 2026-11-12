@@ -1,0 +1,330 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DNA Sequence Classifier</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            width: 100%;
+            max-width: 650px;
+            padding: 35px;
+            border-radius: 18px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #334155;
+        }
+
+        textarea {
+            width: 100%;
+            height: 110px;
+            padding: 15px;
+            border: 2px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 16px;
+            resize: vertical;
+            text-transform: uppercase;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #2563eb;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .results {
+            display: none;
+            margin-top: 25px;
+        }
+
+        .results h2 {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .result-card {
+            background: #eff6ff;
+            padding: 18px;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        .result-card h3 {
+            color: #475569;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .result-card p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #1d4ed8;
+        }
+
+        .classification {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            background: #dcfce7;
+        }
+
+        .classification h2 {
+            color: #166534;
+            margin-bottom: 8px;
+        }
+
+        .classification p {
+            color: #166534;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #dc2626;
+            margin-top: 12px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .note {
+            text-align: center;
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 22px;
+        }
+
+        @media (max-width: 450px) {
+            .container {
+                padding: 22px;
+            }
+
+            .result-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>DNA Sequence Classifier</h1>
+
+        <p class="subtitle">
+            Analyze DNA nucleotide composition and GC content
+        </p>
+
+        <label for="dnaSequence">
+            Enter DNA Sequence:
+        </label>
+
+        <textarea id="dnaSequence">ATGCGCGATC</textarea>
+
+        <button onclick="classifyDNA()">
+            Analyze DNA Sequence
+        </button>
+
+        <p class="error" id="error"></p>
+
+        <div class="results" id="results">
+
+            <h2>Analysis Results</h2>
+
+            <div class="result-grid">
+
+                <div class="result-card">
+                    <h3>Adenine (A)</h3>
+                    <p id="countA">0</p>
+                </div>
+
+                <div class="result-card">
+                    <h3>Thymine (T)</h3>
+                    <p id="countT">0</p>
+                </div>
+
+                <div class="result-card">
+                    <h3>Guanine (G)</h3>
+                    <p id="countG">0</p>
+                </div>
+
+                <div class="result-card">
+                    <h3>Cytosine (C)</h3>
+                    <p id="countC">0</p>
+                </div>
+
+                <div class="result-card">
+                    <h3>Sequence Length</h3>
+                    <p id="length">0</p>
+                </div>
+
+                <div class="result-card">
+                    <h3>GC Content</h3>
+                    <p id="gcContent">0%</p>
+                </div>
+
+            </div>
+
+            <div class="classification">
+
+                <h2>Classification</h2>
+
+                <p id="groupResult">Group A</p>
+
+                <p id="groupDescription"></p>
+
+            </div>
+
+        </div>
+
+        <p class="note">
+            DNA Classifier | HTML, CSS and JavaScript
+        </p>
+
+    </div>
+
+    <script>
+
+        function classifyDNA() {
+
+            // Get DNA sequence from input
+            let sequence = document
+                .getElementById("dnaSequence")
+                .value
+                .toUpperCase()
+                .replace(/\s/g, "");
+
+            let error = document.getElementById("error");
+            let results = document.getElementById("results");
+
+            // Validate input
+            if (sequence.length === 0) {
+                error.textContent = "Please enter a DNA sequence.";
+                error.style.display = "block";
+                results.style.display = "none";
+                return;
+            }
+
+            if (!/^[ATGC]+$/.test(sequence)) {
+                error.textContent =
+                    "Invalid DNA sequence! Only A, T, G and C are allowed.";
+                error.style.display = "block";
+                results.style.display = "none";
+                return;
+            }
+
+            error.style.display = "none";
+
+            // Count nucleotides
+            let countA = (sequence.match(/A/g) || []).length;
+            let countT = (sequence.match(/T/g) || []).length;
+            let countG = (sequence.match(/G/g) || []).length;
+            let countC = (sequence.match(/C/g) || []).length;
+
+            // Calculate sequence length
+            let length = sequence.length;
+
+            // Calculate GC content
+            let gcContent = ((countG + countC) / length) * 100;
+
+            // Classification rule
+            // Group A: GC content >= 50%
+            // Group B: GC content < 50%
+
+            let group;
+
+            if (gcContent >= 50) {
+                group = "Group A";
+            } else {
+                group = "Group B";
+            }
+
+            // Display nucleotide counts
+            document.getElementById("countA").textContent = countA;
+            document.getElementById("countT").textContent = countT;
+            document.getElementById("countG").textContent = countG;
+            document.getElementById("countC").textContent = countC;
+
+            // Display sequence length and GC content
+            document.getElementById("length").textContent = length;
+            document.getElementById("gcContent").textContent =
+                gcContent.toFixed(2) + "%";
+
+            // Display classification
+            document.getElementById("groupResult").textContent = group;
+
+            document.getElementById("groupDescription").textContent =
+                group === "Group A"
+                ? "High GC content (50% or above)"
+                : "Low GC content (below 50%)";
+
+            // Show results
+            results.style.display = "block";
+        }
+
+        // Automatically analyze default sequence on page load
+        window.onload = classifyDNA;
+
+    </script>
+
+</body>
+</html>
